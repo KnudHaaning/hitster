@@ -115,6 +115,13 @@ function init() {
     showScreen('screen-game');
     render(state);
   });
+
+  document.getElementById('btn-new-game').addEventListener('click', () => {
+    sessionStorage.removeItem(STATE_KEY);
+    state = buildInitialState(TRACKS);
+    saveState(state);
+    render(state);
+  });
 }
 
 if (typeof document !== 'undefined') {
