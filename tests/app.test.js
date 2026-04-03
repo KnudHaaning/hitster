@@ -38,3 +38,45 @@ describe('getNextTrack', () => {
     expect(newState.currentIndex).toBe(2);
   });
 });
+
+const { buildInitialState, saveState, loadState } = require('../app.js');
+
+describe('buildInitialState', () => {
+  test('shuffles tracks and sets currentIndex to 0', () => {
+    const tracks = [
+      { uri: 'a', title: 'A', artist: 'X', year: '1990' },
+      { uri: 'b', title: 'B', artist: 'Y', year: '2000' },
+    ];
+    const state = buildInitialState(tracks);
+    expect(state.shuffled).toHaveLength(2);
+    expect(state.currentIndex).toBe(0);
+    expect(state.currentTrack).toBeNull();
+    expect(state.revealed).toBe(false);
+  });
+});
+
+describe('saveState / loadState', () => {
+  beforeEach(() => {
+    // Mock sessionStorage for Node environment
+    global.sessionStorage = (() => {
+      let store = {};
+      return {
+        getItem: k => store[k] ?? null,
+        setItem: (k, v) => { store[k] = v; },
+        removeItem: k => { delete store[k]; },
+        clear: () => { store = {}; },
+      };
+    })();
+  });
+
+  test('round-trips state through sessionStorage', () => {
+    const state = { shuffled: [{ uri: 'a' }], currentIndex: 1, currentTrack: null, revealed: false };
+    saveState(state);
+    expect(loadState()).toEqual(state);
+  });
+
+  test('loadState returns null when nothing saved', () => {
+    sessionStorage.clear();
+    expect(loadState()).toBeNull();
+  });
+});

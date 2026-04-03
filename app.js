@@ -19,6 +19,28 @@ function getNextTrack(state) {
   return { track, newState };
 }
 
+// ─── State management ─────────────────────────────────────────────────────
+
+const STATE_KEY = 'hitster_state';
+
+function buildInitialState(tracks) {
+  return {
+    shuffled: shuffleArray(tracks),
+    currentIndex: 0,
+    currentTrack: null,
+    revealed: false,
+  };
+}
+
+function saveState(state) {
+  sessionStorage.setItem(STATE_KEY, JSON.stringify(state));
+}
+
+function loadState() {
+  const raw = sessionStorage.getItem(STATE_KEY);
+  return raw ? JSON.parse(raw) : null;
+}
+
 if (typeof module !== 'undefined') {
-  module.exports = { shuffleArray, getNextTrack };
+  module.exports = { shuffleArray, getNextTrack, buildInitialState, saveState, loadState };
 }
