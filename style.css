@@ -1,0 +1,170 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.hidden { display: none; }
+
+:root {
+  --green: #1DB954;
+  --bg: #0a1628;
+  --surface: #111827;
+  --text: #ffffff;
+  --muted: #9ca3af;
+  --border: #374151;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: 0;
+}
+
+.screen.hidden { display: none; }
+
+/* ── Header ── */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 12px;
+  flex-shrink: 0;
+}
+
+.logo {
+  color: var(--green);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.counter {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── Main ── */
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 16px;
+}
+
+.idle-icon {
+  font-size: 64px;
+  opacity: 0.3;
+}
+
+/* ── Reveal area ── */
+.reveal-area {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+/* .hidden is defined globally above */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.year-badge {
+  background: var(--green);
+  color: #000;
+  font-size: 52px;
+  font-weight: 900;
+  padding: 10px 28px;
+  border-radius: 14px;
+  letter-spacing: -1px;
+}
+
+.song-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  max-width: 280px;
+  line-height: 1.3;
+}
+
+.song-artist {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* ── Footer ── */
+footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 24px 32px;
+  flex-shrink: 0;
+}
+
+/* ── Buttons ── */
+.btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-appearance: none;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--green);
+  color: #000;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--green);
+  border: 2px solid var(--green);
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: var(--muted);
+  color: var(--muted);
+}
+
+.btn:disabled:active { transform: none; }
+
+/* ── Complete Screen ── */
+.complete-content {
+  gap: 20px;
+  max-width: 320px;
+  text-align: center;
+}
+
+.complete-icon { font-size: 64px; }
+
+.complete-content h1 {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.complete-content p {
+  color: var(--muted);
+  font-size: 15px;
+}
