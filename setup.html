@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hitster Setup</title>
+  <style>
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a1628; color: #fff; display: flex; align-items: center;
+      justify-content: center; min-height: 100vh;
+    }
+    .card {
+      background: #111827; border-radius: 16px; padding: 40px;
+      max-width: 480px; width: 90%; text-align: center;
+    }
+    h1 { color: #1DB954; font-size: 22px; margin-bottom: 8px; letter-spacing: 2px; }
+    p { color: #9ca3af; line-height: 1.6; margin-bottom: 24px; }
+    button {
+      background: #1DB954; color: #000; font-size: 16px; font-weight: 700;
+      padding: 14px 32px; border: none; border-radius: 10px; cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+    #status { margin-top: 20px; color: #9ca3af; font-size: 14px; }
+    .success { color: #1DB954 !important; }
+    .error { color: #ef4444 !important; }
+    code { background: #1f2937; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>HITSTER SETUP</h1>
+  <div id="view-authorize">
+    <p>This page fetches all tracks from the Hitster Spotify playlist and saves them as <code>tracks.js</code>. Click below to authorize with your Spotify account.</p>
+    <button onclick="authorize()">Connect with Spotify</button>
+  </div>
+  <div id="view-fetching" style="display:none">
+    <p>Fetching playlist tracks from Spotify…</p>
+  </div>
+  <div id="view-done" style="display:none">
+    <p class="success" id="done-msg"></p>
+    <p>The file <code>tracks.js</code> has been downloaded. Move it to your project root (replacing the placeholder), then commit it:<br><br>
+    <code>git add tracks.js && git commit -m "feat: add pre-bundled Hitster track data"</code></p>
+  </div>
+  <div id="view-error" style="display:none">
+    <p class="error" id="error-msg"></p>
+  </div>
+  <div id="status"></div>
+</div>
+
+<script>
+  const CLIENT_ID   = '39874386f62845a792cd7dbbea3e6fb7';
+  const PLAYLIST_ID = '7IIQP0uTMPsXnKdBuNCjpB';
+  const REDIRECT_URI = 'http://127.0.0.1:8080/setup.html';
+
+  function show(id) {
+    ['view-authorize','view-fetching','view-done','view-error'].forEach(v => {
+      document.getElementById(v).style.display = v === id ? '' : 'none';
+    });
+  }
+
+  function generateVerifier(len = 128) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const arr = new Uint8Array(len);
+    crypto.getRandomValues(arr);
+    return Array.from(arr, b => chars[b % chars.length]).join('');
+  }
+
+  async function generateChallenge(verifier) {
+    const data = new TextEncoder().encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  }
+
+  async function authorize() {
+    const verifier = generateVerifier();
+    sessionStorage.setItem('pkce_verifier', verifier);
+    const challenge = await generateChallenge(verifier);
+    const params = new URLSearchParams({
+      client_id: CLIENT_ID, response_type: 'code',
+      redirect_uri: REDIRECT_URI, scope: 'playlist-read-private playlist-read-collaborative',
+      code_challenge_method: 'S256', code_challenge: challenge,
+    });
+    window.location.href = `https://accounts.spotify.com/authorize?${params}`;
+  }
+
+  async function fetchToken(code) {
+    const verifier = sessionStorage.getItem('pkce_verifier');
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: CLIENT_ID, grant_type: 'authorization_code',
+        code, redirect_uri: REDIRECT_URI, code_verifier: verifier,
+      }),
+    });
+    const data = await res.json();
+    if (!data.access_token) throw new Error(data.error_description || 'Token exchange failed');
+    return data.access_token;
+  }
+
+  async function fetchAllTracks(token) {
+    const tracks = [];
+    let url = `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks?limit=100`;
+    while (url) {
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.error) throw new Error(`${data.error.status}: ${data.error.message}`);
+      for (const item of (data.items || [])) {
+        const t = item.track;
+        if (!t || !t.uri) continue;
+        tracks.push({
+          uri: t.uri,
+          title: t.name,
+          artist: t.artists.map(a => a.name).join(', '),
+          year: t.album.release_date.slice(0, 4),
+        });
+      }
+      url = data.next || null;
+    }
+    return tracks;
+  }
+
+  function download(tracks) {
+    const content = `// Auto-generated by setup.html\n// ${tracks.length} tracks from Hitster playlist\nconst TRACKS = ${JSON.stringify(tracks, null, 2)};\n`;
+    const blob = new Blob([content], { type: 'application/javascript' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'tracks.js';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // Handle OAuth callback
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const error = params.get('error');
+
+  if (error) {
+    show('view-error');
+    document.getElementById('error-msg').textContent = 'Spotify authorization denied: ' + error;
+  } else if (code) {
+    show('view-fetching');
+    (async () => {
+      try {
+        const token = await fetchToken(code);
+        const tracks = await fetchAllTracks(token);
+        download(tracks);
+        show('view-done');
+        document.getElementById('done-msg').textContent = `✓ Downloaded ${tracks.length} tracks successfully!`;
+      } catch (e) {
+        show('view-error');
+        document.getElementById('error-msg').textContent = 'Error: ' + e.message;
+      }
+    })();
+  }
+</script>
+</body>
+</html>
