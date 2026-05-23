@@ -129,6 +129,8 @@ function playTrack(track) {
   window.location.href = track.uri;
 }
 
+const esc = s => String(s ?? '').replace(/[<>&]/g, '');
+
 function renderTimeline(timelineCards, selectedSlot, phase) {
   const strip = document.getElementById('timeline-strip');
   strip.innerHTML = '';
@@ -149,8 +151,8 @@ function renderTimeline(timelineCards, selectedSlot, phase) {
       const chip = document.createElement('div');
       chip.className = 'card-chip' + (isAtRisk ? ' at-risk' : '');
       chip.innerHTML =
-        `<div class="yr">${card.year}</div>` +
-        `<div class="ti">${(card.title || '').replace(/[<>&]/g, '')}</div>`;
+        `<div class="yr">${esc(card.year)}</div>` +
+        `<div class="ti">${esc(card.title)}</div>`;
       strip.appendChild(chip);
     }
   }
@@ -181,9 +183,9 @@ function renderPlayArea(state) {
     const card = document.createElement('div');
     card.className = 'revealed-card' + (state.phase === 'revealed-wrong' ? ' wrong' : '');
     card.innerHTML =
-      `<div class="yr-badge">${t.year}</div>` +
-      `<div class="title">${(t.title || '').replace(/[<>&]/g, '')}</div>` +
-      `<div class="artist">${(t.artist || '').replace(/[<>&]/g, '')}</div>`;
+      `<div class="yr-badge">${esc(t.year)}</div>` +
+      `<div class="title">${esc(t.title)}</div>` +
+      `<div class="artist">${esc(t.artist)}</div>`;
     area.appendChild(card);
   }
 }
@@ -206,8 +208,8 @@ function renderButtons(state) {
   } else if (state.phase === 'placing') {
     stack.appendChild(make('btn-reveal', 'Reveal & Score', 'primary', state.selectedSlot === null));
   } else if (state.phase === 'revealed-correct') {
-    const banked = state.teams[state.activeTeam].atRisk.length;
-    stack.appendChild(make('btn-lock', `🔒 Lock Turn (banks ${banked})`));
+    const atRiskCount = state.teams[state.activeTeam].atRisk.length;
+    stack.appendChild(make('btn-lock', `🔒 Lock Turn (banks ${atRiskCount})`));
     stack.appendChild(make('btn-play-next', '▶ Play Next Song', 'secondary'));
   } else if (state.phase === 'revealed-wrong') {
     const otherName = state.teams[1 - state.activeTeam].name;
@@ -275,7 +277,7 @@ function init() {
   document.getElementById('btn-new-game-deck').addEventListener('click', startNewGame);
 
   document.getElementById('screen-game').addEventListener('click', e => {
-    const target = e.target.closest('[id], [data-slot-index]');
+    const target = e.target.closest('[data-slot-index], .btn');
     if (!target) return;
 
     // Slot taps
@@ -317,7 +319,9 @@ function init() {
       }
       case 'btn-play-next': {
         if (state.currentIndex >= state.shuffled.length) {
-          state = { ...state, phase: 'idle', currentTrack: null };
+          // Deck ran out mid press-your-luck. Auto-lock the at-risk cards
+          // since the team didn't fail — they just hit deck exhaustion.
+          state = applyLock(state);
           saveState(state);
           render(state);
           return;
