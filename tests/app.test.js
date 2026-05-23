@@ -42,16 +42,43 @@ describe('drawNextTrack', () => {
 const { buildInitialState, saveState, loadState } = require('../app.js');
 
 describe('buildInitialState', () => {
-  test('shuffles tracks and sets currentIndex to 0', () => {
-    const tracks = [
-      { uri: 'a', title: 'A', artist: 'X', year: '1990' },
-      { uri: 'b', title: 'B', artist: 'Y', year: '2000' },
-    ];
+  const tracks = [
+    { uri: 'a', title: 'A', artist: 'X', year: '1990' },
+    { uri: 'b', title: 'B', artist: 'Y', year: '2000' },
+    { uri: 'c', title: 'C', artist: 'Z', year: '2010' },
+    { uri: 'd', title: 'D', artist: 'W', year: '2020' },
+  ];
+
+  test('shuffles the deck and consumes two seed cards', () => {
     const state = buildInitialState(tracks);
-    expect(state.shuffled).toHaveLength(2);
-    expect(state.currentIndex).toBe(0);
+    expect(state.shuffled).toHaveLength(4);
+    expect(state.currentIndex).toBe(2);
+  });
+
+  test('gives each team one banked seed card and no at-risk cards', () => {
+    const state = buildInitialState(tracks);
+    expect(state.teams).toHaveLength(2);
+    expect(state.teams[0].name).toBe('Team 1');
+    expect(state.teams[1].name).toBe('Team 2');
+    expect(state.teams[0].banked).toHaveLength(1);
+    expect(state.teams[1].banked).toHaveLength(1);
+    expect(state.teams[0].atRisk).toEqual([]);
+    expect(state.teams[1].atRisk).toEqual([]);
+  });
+
+  test('sets default phase, target, and active team', () => {
+    const state = buildInitialState(tracks);
+    expect(state.phase).toBe('idle');
+    expect(state.activeTeam).toBe(0);
+    expect(state.targetScore).toBe(10);
     expect(state.currentTrack).toBeNull();
-    expect(state.revealed).toBe(false);
+    expect(state.selectedSlot).toBeNull();
+    expect(state.winner).toBeNull();
+  });
+
+  test('accepts a custom targetScore', () => {
+    const state = buildInitialState(tracks, 5);
+    expect(state.targetScore).toBe(5);
   });
 });
 

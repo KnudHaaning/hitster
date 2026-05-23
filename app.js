@@ -23,12 +23,21 @@ function drawNextTrack(state) {
 
 const STATE_KEY = 'hitster_state';
 
-function buildInitialState(tracks) {
+function buildInitialState(tracks, targetScore = 10) {
+  const shuffled = shuffleArray(tracks);
   return {
-    shuffled: shuffleArray(tracks),
-    currentIndex: 0,
+    shuffled,
+    currentIndex: 2,
     currentTrack: null,
-    revealed: false,
+    selectedSlot: null,
+    teams: [
+      { name: 'Team 1', banked: shuffled[0] ? [shuffled[0]] : [], atRisk: [] },
+      { name: 'Team 2', banked: shuffled[1] ? [shuffled[1]] : [], atRisk: [] },
+    ],
+    activeTeam: 0,
+    targetScore,
+    phase: 'idle',
+    winner: null,
   };
 }
 
