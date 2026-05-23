@@ -326,3 +326,41 @@ describe('applyPlayNext', () => {
     expect(result.activeTeam).toBe(0);
   });
 });
+
+const { applyPassTurn } = require('../app.js');
+
+describe('applyPassTurn', () => {
+  const baseState = () => ({
+    shuffled: [],
+    currentIndex: 5,
+    currentTrack: { uri: 'x', year: '2050' },
+    selectedSlot: 1,
+    teams: [
+      { name: 'Team 1', banked: [{ year: '1980' }], atRisk: [] },
+      { name: 'Team 2', banked: [{ year: '1985' }], atRisk: [] },
+    ],
+    activeTeam: 0,
+    targetScore: 10,
+    phase: 'revealed-wrong',
+    winner: null,
+  });
+
+  test('switches the active team', () => {
+    const result = applyPassTurn(baseState());
+    expect(result.activeTeam).toBe(1);
+  });
+
+  test('resets phase to idle, clears selectedSlot and currentTrack', () => {
+    const result = applyPassTurn(baseState());
+    expect(result.phase).toBe('idle');
+    expect(result.selectedSlot).toBeNull();
+    expect(result.currentTrack).toBeNull();
+  });
+
+  test('leaves team banked + atRisk untouched (already cleared on wrong reveal)', () => {
+    const state = baseState();
+    const result = applyPassTurn(state);
+    expect(result.teams[0].banked).toEqual(state.teams[0].banked);
+    expect(result.teams[1].banked).toEqual(state.teams[1].banked);
+  });
+});

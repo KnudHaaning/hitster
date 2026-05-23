@@ -77,6 +77,16 @@ function applyPlayNext(state) {
   };
 }
 
+function applyPassTurn(state) {
+  return {
+    ...state,
+    activeTeam: 1 - state.activeTeam,
+    phase: 'idle',
+    selectedSlot: null,
+    currentTrack: null,
+  };
+}
+
 // ─── State management ─────────────────────────────────────────────────────
 
 const STATE_KEY = 'hitster_state';
@@ -196,5 +206,5 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, applyReveal, applyLock, applyPlayNext, buildInitialState, saveState, loadState };
+  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, applyReveal, applyLock, applyPlayNext, applyPassTurn, buildInitialState, saveState, loadState };
 }
