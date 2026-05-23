@@ -15,7 +15,7 @@ function drawNextTrack(state) {
     return { track: null, newState: state };
   }
   const track = shuffled[currentIndex];
-  const newState = { ...state, currentIndex: currentIndex + 1, currentTrack: track, revealed: false };
+  const newState = { ...state, currentIndex: currentIndex + 1, currentTrack: track };
   return { track, newState };
 }
 

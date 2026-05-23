@@ -23,16 +23,15 @@ describe('drawNextTrack', () => {
   ];
 
   test('returns track at currentIndex', () => {
-    const state = { shuffled: tracks, currentIndex: 0, currentTrack: null, revealed: false };
+    const state = { shuffled: tracks, currentIndex: 0, currentTrack: null };
     const { track, newState } = drawNextTrack(state);
     expect(track).toEqual(tracks[0]);
     expect(newState.currentIndex).toBe(1);
     expect(newState.currentTrack).toEqual(tracks[0]);
-    expect(newState.revealed).toBe(false);
   });
 
   test('returns null when all tracks are played', () => {
-    const state = { shuffled: tracks, currentIndex: 2, currentTrack: null, revealed: false };
+    const state = { shuffled: tracks, currentIndex: 2, currentTrack: null };
     const { track, newState } = drawNextTrack(state);
     expect(track).toBeNull();
     expect(newState.currentIndex).toBe(2);
