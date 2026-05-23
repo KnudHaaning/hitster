@@ -9,7 +9,15 @@
   --text: #ffffff;
   --muted: #9ca3af;
   --border: #374151;
+  --team-0: #1DB954;
+  --team-1: #f97316;
+  --danger: #ef4444;
 }
+
+.team-0 { --team-color: var(--team-0); }
+.team-1 { --team-color: var(--team-1); }
+.team-0-name { color: var(--team-0); }
+.team-1-name { color: var(--team-1); }
 
 html, body {
   height: 100%;
@@ -96,14 +104,14 @@ footer {
 .btn:active { transform: scale(0.97); }
 
 .btn-primary {
-  background: var(--green);
+  background: var(--team-color, var(--green));
   color: #000;
 }
 
 .btn-secondary {
   background: transparent;
-  color: var(--green);
-  border: 2px solid var(--green);
+  color: var(--team-color, var(--green));
+  border: 2px solid var(--team-color, var(--green));
 }
 
 .btn:disabled {
@@ -148,18 +156,19 @@ footer {
   justify-content: space-between;
   align-items: center;
   background: var(--surface);
+  border-left: 3px solid var(--team-color, var(--muted));
   border-radius: 8px;
   padding: 8px 14px;
   margin: 0 16px 8px;
   font-size: 13px;
   color: var(--muted);
 }
-.team-chip .score { color: var(--green); font-weight: 700; }
+.team-chip .score { color: var(--team-color, var(--green)); font-weight: 700; }
 
 /* ── Active team row ── */
 .team-row {
-  background: rgba(29, 185, 84, 0.08);
-  border: 1px solid var(--green);
+  background: color-mix(in srgb, var(--team-color, var(--green)) 10%, transparent);
+  border: 1px solid var(--team-color, var(--green));
   border-radius: 12px;
   margin: 0 16px 12px;
   padding: 10px 12px;
@@ -168,19 +177,31 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .team-name { font-weight: 700; font-size: 13px; }
-.team-score { color: var(--green); font-weight: 700; font-size: 13px; }
+.team-score { color: var(--team-color, var(--green)); font-weight: 700; font-size: 13px; }
+.at-risk-count {
+  display: inline-block;
+  margin-left: 8px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
 
 /* ── Timeline strip ── */
 .timeline-strip {
   display: flex;
-  align-items: stretch;
-  gap: 4px;
+  align-items: center;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding: 10px 4px 4px;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
 }
 .timeline-strip::-webkit-scrollbar { height: 4px; }
 .timeline-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -188,54 +209,119 @@ footer {
 /* ── Card chips ── */
 .card-chip {
   flex-shrink: 0;
-  min-width: 56px;
-  border-radius: 8px;
-  padding: 8px 10px;
+  width: 96px;
+  border-radius: 10px;
+  padding: 6px;
   text-align: center;
   background: var(--surface);
-  border: 2px solid var(--green);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  scroll-snap-align: center;
+  position: relative;
+  /* default to active team color when nothing more specific applies */
 }
-.card-chip .yr { font-size: 16px; font-weight: 800; color: var(--text); }
+.card-chip .yr-badge {
+  background: var(--card-color, var(--team-color, var(--green)));
+  color: #000;
+  font-size: 22px;
+  font-weight: 900;
+  padding: 6px 0;
+  border-radius: 8px;
+  width: 100%;
+  line-height: 1;
+}
 .card-chip .ti {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.15;
+  width: 100%;
+  max-height: 26px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.card-chip .ar {
   font-size: 9px;
   color: var(--muted);
   line-height: 1.1;
-  margin-top: 2px;
-  max-width: 56px;
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.card-chip.at-risk {
-  border-style: dashed;
+.card-chip.at-risk .yr-badge {
+  outline: 2px dashed var(--text);
+  outline-offset: 2px;
   animation: pulse 1.5s ease-in-out infinite;
+}
+.card-chip.at-risk::before {
+  content: '?';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--danger);
+  color: #fff;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  z-index: 2;
 }
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.65; }
+}
+.card-chip.just-added {
+  animation: slideInBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes slideInBounce {
+  0%   { transform: translateY(-40px) scale(0.7); opacity: 0; }
+  60%  { transform: translateY(6px)  scale(1.06); opacity: 1; }
+  100% { transform: translateY(0)     scale(1);    opacity: 1; }
 }
 
 /* ── Slots ── */
 .slot {
   flex-shrink: 0;
-  width: 22px;
-  border: 1px dashed var(--border);
-  border-radius: 8px;
+  width: 32px;
+  min-height: 70px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--border);
-  font-size: 16px;
+  font-size: 22px;
+  font-weight: 800;
   cursor: pointer;
   background: transparent;
+  transition: width 0.18s ease, transform 0.18s ease, color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.timeline-strip.placing .slot:not(.target) {
+  animation: slotPulse 1.6s ease-in-out infinite;
+}
+@keyframes slotPulse {
+  0%, 100% { color: var(--border); border-color: var(--border); }
+  50%      { color: var(--muted);  border-color: var(--muted); }
 }
 .slot.target {
-  border-color: var(--green);
-  color: var(--green);
-  background: rgba(29, 185, 84, 0.12);
+  width: 44px;
+  border-color: var(--team-color, var(--green));
+  border-style: solid;
+  color: var(--team-color, var(--green));
+  background: color-mix(in srgb, var(--team-color, var(--green)) 18%, transparent);
+  transform: scale(1.05);
+  animation: none;
 }
 
 /* ── Play area (mystery card + revealed card) ── */
@@ -251,7 +337,7 @@ footer {
 .idle-icon { font-size: 64px; opacity: 0.3; }
 
 .mystery-card {
-  background: var(--green);
+  background: var(--team-color, var(--green));
   color: #000;
   border-radius: 14px;
   padding: 28px 36px;
@@ -259,6 +345,11 @@ footer {
   font-weight: 800;
   font-size: 18px;
   letter-spacing: 0.5px;
+  animation: breathe 2s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.03); }
 }
 .mystery-card .sub {
   display: block;
@@ -274,21 +365,40 @@ footer {
   to   { opacity: 1; transform: translateY(0); }
 }
 .revealed-card .yr-badge {
-  background: var(--green);
+  background: var(--team-color, var(--green));
   color: #000;
   font-size: 48px;
   font-weight: 900;
   padding: 10px 26px;
   border-radius: 14px;
 }
-.revealed-card.wrong .yr-badge { background: #ef4444; color: #fff; }
+.revealed-card.wrong .yr-badge { background: var(--danger); color: #fff; }
 .revealed-card .title { font-size: 18px; font-weight: 700; max-width: 280px; line-height: 1.3; }
 .revealed-card .artist { font-size: 14px; color: var(--muted); }
 .revealed-card .loss-msg {
   font-size: 13px;
-  color: #ef4444;
+  color: var(--danger);
   font-weight: 700;
   margin-top: 4px;
+}
+
+/* ── Flash overlay (correct = green flash, wrong = red flash) ── */
+.flash-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background: transparent;
+}
+.flash-overlay.flash-green { animation: flashGreen 0.45s ease-out; }
+.flash-overlay.flash-red   { animation: flashRed   0.45s ease-out; }
+@keyframes flashGreen {
+  0%   { background: rgba(29, 185, 84, 0.32); }
+  100% { background: rgba(29, 185, 84, 0); }
+}
+@keyframes flashRed {
+  0%   { background: rgba(239, 68, 68, 0.32); }
+  100% { background: rgba(239, 68, 68, 0); }
 }
 
 /* ── Button stack ── */

@@ -140,6 +140,7 @@ const esc = s => String(s ?? '').replace(/[<>&]/g, '');
 function renderTimeline(timelineCards, selectedSlot, phase) {
   const strip = document.getElementById('timeline-strip');
   strip.innerHTML = '';
+  strip.className = 'timeline-strip' + (phase === 'placing' ? ' placing' : '');
 
   const interactable = phase === 'placing';
 
@@ -153,12 +154,15 @@ function renderTimeline(timelineCards, selectedSlot, phase) {
 
     if (i < timelineCards.length) {
       const card = timelineCards[i];
-      const isAtRisk = card._atRisk;
+      const classes = ['card-chip'];
+      if (card._atRisk) classes.push('at-risk');
+      if (card._justAdded) classes.push('just-added');
       const chip = document.createElement('div');
-      chip.className = 'card-chip' + (isAtRisk ? ' at-risk' : '');
+      chip.className = classes.join(' ');
       chip.innerHTML =
-        `<div class="yr">${esc(card.year)}</div>` +
-        `<div class="ti">${esc(card.title)}</div>`;
+        `<div class="yr-badge">${esc(card.year)}</div>` +
+        `<div class="ti">${esc(card.title)}</div>` +
+        `<div class="ar">${esc(card.artist)}</div>`;
       strip.appendChild(chip);
     }
   }
@@ -253,24 +257,48 @@ function render(state) {
 
   const active = state.teams[state.activeTeam];
   const inactive = state.teams[1 - state.activeTeam];
+  const inactiveIdx = 1 - state.activeTeam;
 
-  document.getElementById('turn-indicator').innerHTML = `Turn: <strong>${esc(active.name)}</strong>`;
+  // Make team color cascade through the whole game screen.
+  const gameScreen = document.getElementById('screen-game');
+  gameScreen.classList.remove('team-0', 'team-1');
+  gameScreen.classList.add('team-' + state.activeTeam);
+
+  document.getElementById('turn-indicator').innerHTML =
+    `Turn: <strong class="team-${state.activeTeam}-name">${esc(active.name)}</strong>`;
 
   const chip = document.getElementById('inactive-team-chip');
-  chip.innerHTML = `<span>${esc(inactive.name)}</span><span class="score">${inactive.banked.length} / ${state.targetScore}</span>`;
+  chip.className = 'team-chip team-' + inactiveIdx;
+  chip.innerHTML =
+    `<span>${esc(inactive.name)}</span>` +
+    `<span class="score">${inactive.banked.length} / ${state.targetScore}</span>`;
 
   document.getElementById('active-team-name').textContent = active.name;
-  document.getElementById('active-team-score').textContent =
-    `${active.banked.length} / ${state.targetScore}`;
+  const atRiskN = active.atRisk.length;
+  document.getElementById('active-team-score').innerHTML =
+    `${active.banked.length} / ${state.targetScore}` +
+    (atRiskN > 0 ? `<span class="at-risk-count">${atRiskN} AT RISK</span>` : '');
 
   const merged = mergeTimeline(active);
+  const justAddedUri = state.phase === 'revealed-correct' && state.currentTrack
+    ? state.currentTrack.uri : null;
   const taggedMerged = merged.map(card => ({
     ...card,
     _atRisk: active.atRisk.some(r => r.uri === card.uri),
+    _justAdded: card.uri === justAddedUri,
   }));
   renderTimeline(taggedMerged, state.selectedSlot, state.phase);
   renderPlayArea(state);
   renderButtons(state);
+}
+
+function flashScreen(color) {
+  const overlay = document.getElementById('flash-overlay');
+  if (!overlay) return;
+  overlay.className = 'flash-overlay';
+  // Force a reflow so the next class re-triggers the animation
+  void overlay.offsetWidth;
+  overlay.classList.add('flash-' + color);
 }
 
 function init() {
@@ -322,6 +350,7 @@ function init() {
         state = applyReveal(state);
         saveState(state);
         render(state);
+        flashScreen(state.phase === 'revealed-correct' ? 'green' : 'red');
         break;
       }
       case 'btn-lock': {
