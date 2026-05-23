@@ -49,6 +49,25 @@ function applyReveal(state) {
   };
 }
 
+function applyLock(state) {
+  const newTeams = state.teams.map((t, i) => {
+    if (i !== state.activeTeam) return t;
+    return { ...t, banked: [...t.banked, ...t.atRisk], atRisk: [] };
+  });
+  const wonTeam = newTeams[state.activeTeam];
+  const isWin = wonTeam.banked.length >= state.targetScore;
+
+  return {
+    ...state,
+    teams: newTeams,
+    activeTeam: isWin ? state.activeTeam : 1 - state.activeTeam,
+    phase: isWin ? 'gameover' : 'idle',
+    winner: isWin ? state.activeTeam : null,
+    selectedSlot: null,
+    currentTrack: null,
+  };
+}
+
 // ─── State management ─────────────────────────────────────────────────────
 
 const STATE_KEY = 'hitster_state';
@@ -168,5 +187,5 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, applyReveal, buildInitialState, saveState, loadState };
+  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, applyReveal, applyLock, buildInitialState, saveState, loadState };
 }

@@ -230,3 +230,53 @@ describe('applyReveal', () => {
     expect(state.phase).toBe('placing');
   });
 });
+
+const { applyLock } = require('../app.js');
+
+describe('applyLock', () => {
+  const baseState = () => ({
+    shuffled: [],
+    currentIndex: 5,
+    currentTrack: { year: '1990' },
+    selectedSlot: 1,
+    teams: [
+      { name: 'Team 1', banked: [{ year: '1980' }], atRisk: [{ year: '1990' }, { year: '1995' }] },
+      { name: 'Team 2', banked: [{ year: '1985' }], atRisk: [] },
+    ],
+    activeTeam: 0,
+    targetScore: 10,
+    phase: 'revealed-correct',
+    winner: null,
+  });
+
+  test('moves atRisk into banked and clears atRisk', () => {
+    const result = applyLock(baseState());
+    expect(result.teams[0].banked).toHaveLength(3);
+    expect(result.teams[0].atRisk).toEqual([]);
+  });
+
+  test('advances turn and resets phase + selectedSlot + currentTrack', () => {
+    const result = applyLock(baseState());
+    expect(result.activeTeam).toBe(1);
+    expect(result.phase).toBe('idle');
+    expect(result.selectedSlot).toBeNull();
+    expect(result.currentTrack).toBeNull();
+  });
+
+  test('triggers win when banked count reaches targetScore', () => {
+    const state = baseState();
+    state.targetScore = 3;
+    const result = applyLock(state);
+    expect(result.phase).toBe('gameover');
+    expect(result.winner).toBe(0);
+    expect(result.activeTeam).toBe(0);
+  });
+
+  test('does not mutate the input state', () => {
+    const state = baseState();
+    const beforeBanked = [...state.teams[0].banked];
+    applyLock(state);
+    expect(state.teams[0].banked).toEqual(beforeBanked);
+    expect(state.phase).toBe('revealed-correct');
+  });
+});
