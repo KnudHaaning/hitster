@@ -19,6 +19,10 @@ function drawNextTrack(state) {
   return { track, newState };
 }
 
+function mergeTimeline(team) {
+  return [...team.banked, ...team.atRisk].sort((a, b) => Number(a.year) - Number(b.year));
+}
+
 // ─── State management ─────────────────────────────────────────────────────
 
 const STATE_KEY = 'hitster_state';
@@ -138,5 +142,5 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { shuffleArray, drawNextTrack, buildInitialState, saveState, loadState };
+  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, buildInitialState, saveState, loadState };
 }

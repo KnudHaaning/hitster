@@ -105,3 +105,38 @@ describe('saveState / loadState', () => {
     expect(loadState()).toBeNull();
   });
 });
+
+const { mergeTimeline } = require('../app.js');
+
+describe('mergeTimeline', () => {
+  test('returns banked + atRisk sorted by year ascending', () => {
+    const team = {
+      banked: [{ year: '1995' }, { year: '1980' }],
+      atRisk: [{ year: '2005' }, { year: '1988' }],
+    };
+    const result = mergeTimeline(team);
+    expect(result.map(t => t.year)).toEqual(['1980', '1988', '1995', '2005']);
+  });
+
+  test('handles empty banked', () => {
+    const team = { banked: [], atRisk: [{ year: '2000' }] };
+    expect(mergeTimeline(team)).toEqual([{ year: '2000' }]);
+  });
+
+  test('handles empty atRisk', () => {
+    const team = { banked: [{ year: '1970' }], atRisk: [] };
+    expect(mergeTimeline(team)).toEqual([{ year: '1970' }]);
+  });
+
+  test('handles fully empty team', () => {
+    expect(mergeTimeline({ banked: [], atRisk: [] })).toEqual([]);
+  });
+
+  test('does not mutate input arrays', () => {
+    const banked = [{ year: '2000' }];
+    const atRisk = [{ year: '1990' }];
+    mergeTimeline({ banked, atRisk });
+    expect(banked).toEqual([{ year: '2000' }]);
+    expect(atRisk).toEqual([{ year: '1990' }]);
+  });
+});
