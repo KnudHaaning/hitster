@@ -9,7 +9,7 @@ function shuffleArray(arr) {
   return result;
 }
 
-function getNextTrack(state) {
+function drawNextTrack(state) {
   const { shuffled, currentIndex } = state;
   if (currentIndex >= shuffled.length) {
     return { track: null, newState: state };
@@ -90,7 +90,7 @@ function init() {
   render(state);
 
   document.getElementById('btn-play').addEventListener('click', () => {
-    const { track, newState } = getNextTrack(state);
+    const { track, newState } = drawNextTrack(state);
     if (!track) {
       showScreen('screen-complete');
       return;
@@ -129,5 +129,5 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { shuffleArray, getNextTrack, buildInitialState, saveState, loadState };
+  module.exports = { shuffleArray, drawNextTrack, buildInitialState, saveState, loadState };
 }
