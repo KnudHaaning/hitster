@@ -68,6 +68,15 @@ function applyLock(state) {
   };
 }
 
+function applyPlayNext(state) {
+  const { track, newState } = drawNextTrack(state);
+  return {
+    ...newState,
+    selectedSlot: null,
+    phase: 'placing',
+  };
+}
+
 // ─── State management ─────────────────────────────────────────────────────
 
 const STATE_KEY = 'hitster_state';
@@ -187,5 +196,5 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, applyReveal, applyLock, buildInitialState, saveState, loadState };
+  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, applyReveal, applyLock, applyPlayNext, buildInitialState, saveState, loadState };
 }

@@ -280,3 +280,49 @@ describe('applyLock', () => {
     expect(state.phase).toBe('revealed-correct');
   });
 });
+
+const { applyPlayNext } = require('../app.js');
+
+describe('applyPlayNext', () => {
+  const baseState = () => ({
+    shuffled: [
+      { uri: 'a', year: '1980' },
+      { uri: 'b', year: '1990' },
+      { uri: 'c', year: '2000' },
+      { uri: 'd', year: '2010' },
+    ],
+    currentIndex: 2,
+    currentTrack: { uri: 'b', year: '1990' },
+    selectedSlot: 0,
+    teams: [
+      { name: 'Team 1', banked: [{ year: '1980' }], atRisk: [{ year: '1990' }] },
+      { name: 'Team 2', banked: [], atRisk: [] },
+    ],
+    activeTeam: 0,
+    targetScore: 10,
+    phase: 'revealed-correct',
+    winner: null,
+  });
+
+  test('draws the next track and increments currentIndex', () => {
+    const result = applyPlayNext(baseState());
+    expect(result.currentTrack).toEqual({ uri: 'c', year: '2000' });
+    expect(result.currentIndex).toBe(3);
+  });
+
+  test('resets selectedSlot and sets phase to placing', () => {
+    const result = applyPlayNext(baseState());
+    expect(result.selectedSlot).toBeNull();
+    expect(result.phase).toBe('placing');
+  });
+
+  test('keeps at-risk cards on the active team', () => {
+    const result = applyPlayNext(baseState());
+    expect(result.teams[0].atRisk).toEqual([{ year: '1990' }]);
+  });
+
+  test('keeps activeTeam unchanged', () => {
+    const result = applyPlayNext(baseState());
+    expect(result.activeTeam).toBe(0);
+  });
+});
