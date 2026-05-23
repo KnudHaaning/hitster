@@ -140,3 +140,37 @@ describe('mergeTimeline', () => {
     expect(atRisk).toEqual([{ year: '1990' }]);
   });
 });
+
+const { isCorrectPlacement } = require('../app.js');
+
+describe('isCorrectPlacement', () => {
+  const tl = [{ year: '1980' }, { year: '1995' }, { year: '2010' }];
+
+  test('empty timeline: slot 0 is always correct', () => {
+    expect(isCorrectPlacement([], 0, '1990')).toBe(true);
+  });
+
+  test('slot before first card: correct when year <= first', () => {
+    expect(isCorrectPlacement(tl, 0, '1970')).toBe(true);
+    expect(isCorrectPlacement(tl, 0, '1980')).toBe(true);
+    expect(isCorrectPlacement(tl, 0, '1985')).toBe(false);
+  });
+
+  test('slot after last card: correct when year >= last', () => {
+    expect(isCorrectPlacement(tl, 3, '2020')).toBe(true);
+    expect(isCorrectPlacement(tl, 3, '2010')).toBe(true);
+    expect(isCorrectPlacement(tl, 3, '2005')).toBe(false);
+  });
+
+  test('middle slot: correct when between bordering years', () => {
+    expect(isCorrectPlacement(tl, 1, '1985')).toBe(true);
+    expect(isCorrectPlacement(tl, 1, '1980')).toBe(true);
+    expect(isCorrectPlacement(tl, 1, '1995')).toBe(true);
+    expect(isCorrectPlacement(tl, 1, '1979')).toBe(false);
+    expect(isCorrectPlacement(tl, 1, '1996')).toBe(false);
+  });
+
+  test('handles string years like real track data', () => {
+    expect(isCorrectPlacement(tl, 2, '2000')).toBe(true);
+  });
+});

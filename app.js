@@ -23,6 +23,13 @@ function mergeTimeline(team) {
   return [...team.banked, ...team.atRisk].sort((a, b) => Number(a.year) - Number(b.year));
 }
 
+function isCorrectPlacement(timeline, slotIndex, year) {
+  const y = Number(year);
+  const left = slotIndex === 0 ? -Infinity : Number(timeline[slotIndex - 1].year);
+  const right = slotIndex >= timeline.length ? Infinity : Number(timeline[slotIndex].year);
+  return y >= left && y <= right;
+}
+
 // ─── State management ─────────────────────────────────────────────────────
 
 const STATE_KEY = 'hitster_state';
@@ -142,5 +149,5 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, buildInitialState, saveState, loadState };
+  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, buildInitialState, saveState, loadState };
 }
