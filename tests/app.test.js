@@ -57,8 +57,7 @@ describe('buildInitialState', () => {
 
 describe('saveState / loadState', () => {
   beforeEach(() => {
-    // Mock sessionStorage for Node environment
-    global.sessionStorage = (() => {
+    global.localStorage = (() => {
       let store = {};
       return {
         getItem: k => store[k] ?? null,
@@ -69,14 +68,14 @@ describe('saveState / loadState', () => {
     })();
   });
 
-  test('round-trips state through sessionStorage', () => {
-    const state = { shuffled: [{ uri: 'a' }], currentIndex: 1, currentTrack: null, revealed: false };
+  test('round-trips state through localStorage', () => {
+    const state = { shuffled: [{ uri: 'a' }], currentIndex: 1 };
     saveState(state);
     expect(loadState()).toEqual(state);
   });
 
   test('loadState returns null when nothing saved', () => {
-    sessionStorage.clear();
+    localStorage.clear();
     expect(loadState()).toBeNull();
   });
 });

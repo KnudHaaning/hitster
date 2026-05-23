@@ -33,11 +33,11 @@ function buildInitialState(tracks) {
 }
 
 function saveState(state) {
-  sessionStorage.setItem(STATE_KEY, JSON.stringify(state));
+  localStorage.setItem(STATE_KEY, JSON.stringify(state));
 }
 
 function loadState() {
-  const raw = sessionStorage.getItem(STATE_KEY);
+  const raw = localStorage.getItem(STATE_KEY);
   return raw ? JSON.parse(raw) : null;
 }
 
@@ -109,7 +109,7 @@ function init() {
   });
 
   document.getElementById('btn-new-session').addEventListener('click', () => {
-    sessionStorage.removeItem(STATE_KEY);
+    localStorage.removeItem(STATE_KEY);
     state = buildInitialState(TRACKS);
     saveState(state);
     showScreen('screen-game');
@@ -117,7 +117,7 @@ function init() {
   });
 
   document.getElementById('btn-new-game').addEventListener('click', () => {
-    sessionStorage.removeItem(STATE_KEY);
+    localStorage.removeItem(STATE_KEY);
     state = buildInitialState(TRACKS);
     saveState(state);
     render(state);
