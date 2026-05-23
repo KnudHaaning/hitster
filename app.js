@@ -120,38 +120,6 @@ function loadState() {
 
 // ─── UI ───────────────────────────────────────────────────────────────────
 
-function render(state) {
-  const total = state.shuffled.length;
-  const played = state.currentIndex;
-
-  document.getElementById('counter').textContent = `${played} / ${total}`;
-
-  const revealArea = document.getElementById('reveal-area');
-  const idleIcon = document.getElementById('idle-icon');
-  const btnPlay = document.getElementById('btn-play');
-  const btnReveal = document.getElementById('btn-reveal');
-
-  if (state.revealed && state.currentTrack) {
-    revealArea.classList.remove('hidden');
-    idleIcon.classList.add('hidden');
-    document.getElementById('year-badge').textContent = state.currentTrack.year;
-    document.getElementById('song-title').textContent = state.currentTrack.title;
-    document.getElementById('song-artist').textContent = state.currentTrack.artist;
-    btnPlay.textContent = '▶ Next Song';
-    btnReveal.disabled = true;
-  } else if (state.currentTrack) {
-    revealArea.classList.add('hidden');
-    idleIcon.classList.remove('hidden');
-    btnPlay.textContent = '▶ Next Song';
-    btnReveal.disabled = false;
-  } else {
-    revealArea.classList.add('hidden');
-    idleIcon.classList.remove('hidden');
-    btnPlay.textContent = '▶ Play Song';
-    btnReveal.disabled = true;
-  }
-}
-
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
@@ -161,43 +129,213 @@ function playTrack(track) {
   window.location.href = track.uri;
 }
 
+function renderTimeline(timelineCards, selectedSlot, phase) {
+  const strip = document.getElementById('timeline-strip');
+  strip.innerHTML = '';
+
+  const interactable = phase === 'placing';
+
+  for (let i = 0; i <= timelineCards.length; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'slot' + (selectedSlot === i ? ' target' : '');
+    slot.dataset.slotIndex = String(i);
+    slot.textContent = '+';
+    if (!interactable) slot.style.cursor = 'default';
+    strip.appendChild(slot);
+
+    if (i < timelineCards.length) {
+      const card = timelineCards[i];
+      const isAtRisk = card._atRisk;
+      const chip = document.createElement('div');
+      chip.className = 'card-chip' + (isAtRisk ? ' at-risk' : '');
+      chip.innerHTML =
+        `<div class="yr">${card.year}</div>` +
+        `<div class="ti">${(card.title || '').replace(/[<>&]/g, '')}</div>`;
+      strip.appendChild(chip);
+    }
+  }
+}
+
+function renderPlayArea(state) {
+  const area = document.getElementById('play-area');
+  area.innerHTML = '';
+
+  if (state.phase === 'idle') {
+    const icon = document.createElement('div');
+    icon.className = 'idle-icon';
+    icon.textContent = '🎵';
+    area.appendChild(icon);
+    return;
+  }
+
+  if (state.phase === 'placing') {
+    const card = document.createElement('div');
+    card.className = 'mystery-card';
+    card.innerHTML = '▶ MYSTERY SONG<span class="sub">TAP A + SLOT TO PLACE</span>';
+    area.appendChild(card);
+    return;
+  }
+
+  if (state.phase === 'revealed-correct' || state.phase === 'revealed-wrong') {
+    const t = state.currentTrack;
+    const card = document.createElement('div');
+    card.className = 'revealed-card' + (state.phase === 'revealed-wrong' ? ' wrong' : '');
+    card.innerHTML =
+      `<div class="yr-badge">${t.year}</div>` +
+      `<div class="title">${(t.title || '').replace(/[<>&]/g, '')}</div>` +
+      `<div class="artist">${(t.artist || '').replace(/[<>&]/g, '')}</div>`;
+    area.appendChild(card);
+  }
+}
+
+function renderButtons(state) {
+  const stack = document.getElementById('button-stack');
+  stack.innerHTML = '';
+
+  const make = (id, label, kind = 'primary', disabled = false) => {
+    const btn = document.createElement('button');
+    btn.id = id;
+    btn.className = 'btn btn-' + kind;
+    btn.textContent = label;
+    if (disabled) btn.disabled = true;
+    return btn;
+  };
+
+  if (state.phase === 'idle') {
+    stack.appendChild(make('btn-play', '▶ Play Song'));
+  } else if (state.phase === 'placing') {
+    stack.appendChild(make('btn-reveal', 'Reveal & Score', 'primary', state.selectedSlot === null));
+  } else if (state.phase === 'revealed-correct') {
+    const banked = state.teams[state.activeTeam].atRisk.length;
+    stack.appendChild(make('btn-lock', `🔒 Lock Turn (banks ${banked})`));
+    stack.appendChild(make('btn-play-next', '▶ Play Next Song', 'secondary'));
+  } else if (state.phase === 'revealed-wrong') {
+    const otherName = state.teams[1 - state.activeTeam].name;
+    stack.appendChild(make('btn-pass', `Pass to ${otherName}`));
+  }
+}
+
+function render(state) {
+  if (state.phase === 'gameover') {
+    showScreen('screen-winner');
+    document.getElementById('winner-headline').textContent =
+      `🎉 ${state.teams[state.winner].name} wins!`;
+    document.getElementById('winner-scores').textContent =
+      `${state.teams[0].name}: ${state.teams[0].banked.length} · ${state.teams[1].name}: ${state.teams[1].banked.length}`;
+    return;
+  }
+
+  if (state.currentIndex >= state.shuffled.length && state.phase === 'idle') {
+    showScreen('screen-deck-empty');
+    const a = state.teams[0].banked.length;
+    const b = state.teams[1].banked.length;
+    const msg = a === b ? 'Draw' : `${state.teams[a > b ? 0 : 1].name} wins`;
+    document.getElementById('deck-empty-result').textContent =
+      `${state.teams[0].name}: ${a} · ${state.teams[1].name}: ${b} — ${msg}`;
+    return;
+  }
+
+  showScreen('screen-game');
+
+  const active = state.teams[state.activeTeam];
+  const inactive = state.teams[1 - state.activeTeam];
+
+  document.getElementById('turn-indicator').innerHTML = `Turn: <strong>${active.name}</strong>`;
+
+  const chip = document.getElementById('inactive-team-chip');
+  chip.innerHTML = `<span>${inactive.name}</span><span class="score">${inactive.banked.length} / ${state.targetScore}</span>`;
+
+  document.getElementById('active-team-name').textContent = active.name;
+  document.getElementById('active-team-score').textContent =
+    `${active.banked.length} / ${state.targetScore}`;
+
+  const merged = mergeTimeline(active);
+  const taggedMerged = merged.map(card => ({
+    ...card,
+    _atRisk: active.atRisk.some(r => r.uri === card.uri),
+  }));
+  renderTimeline(taggedMerged, state.selectedSlot, state.phase);
+  renderPlayArea(state);
+  renderButtons(state);
+}
+
 function init() {
   let state = loadState() || buildInitialState(TRACKS);
   saveState(state);
   render(state);
 
-  document.getElementById('btn-play').addEventListener('click', () => {
-    const { track, newState } = drawNextTrack(state);
-    if (!track) {
-      showScreen('screen-complete');
+  function startNewGame() {
+    localStorage.removeItem(STATE_KEY);
+    state = buildInitialState(TRACKS);
+    saveState(state);
+    render(state);
+  }
+  document.getElementById('btn-new-game').addEventListener('click', startNewGame);
+  document.getElementById('btn-new-game-winner').addEventListener('click', startNewGame);
+  document.getElementById('btn-new-game-deck').addEventListener('click', startNewGame);
+
+  document.getElementById('screen-game').addEventListener('click', e => {
+    const target = e.target.closest('[id], [data-slot-index]');
+    if (!target) return;
+
+    // Slot taps
+    if (target.dataset.slotIndex !== undefined && state.phase === 'placing') {
+      state = { ...state, selectedSlot: Number(target.dataset.slotIndex) };
+      saveState(state);
+      render(state);
       return;
     }
-    state = newState;
-    saveState(state);
-    playTrack(track);
-    render(state);
-  });
 
-  document.getElementById('btn-reveal').addEventListener('click', () => {
-    if (!state.currentTrack || state.revealed) return;
-    state = { ...state, revealed: true };
-    saveState(state);
-    render(state);
-  });
-
-  document.getElementById('btn-new-session').addEventListener('click', () => {
-    localStorage.removeItem(STATE_KEY);
-    state = buildInitialState(TRACKS);
-    saveState(state);
-    showScreen('screen-game');
-    render(state);
-  });
-
-  document.getElementById('btn-new-game').addEventListener('click', () => {
-    localStorage.removeItem(STATE_KEY);
-    state = buildInitialState(TRACKS);
-    saveState(state);
-    render(state);
+    // Button taps
+    switch (target.id) {
+      case 'btn-play': {
+        const { track, newState } = drawNextTrack(state);
+        if (!track) {
+          state = { ...newState, phase: 'idle' };
+          saveState(state);
+          render(state);
+          return;
+        }
+        state = { ...newState, phase: 'placing', selectedSlot: null };
+        saveState(state);
+        playTrack(track);
+        render(state);
+        break;
+      }
+      case 'btn-reveal': {
+        if (state.selectedSlot === null) return;
+        state = applyReveal(state);
+        saveState(state);
+        render(state);
+        break;
+      }
+      case 'btn-lock': {
+        state = applyLock(state);
+        saveState(state);
+        render(state);
+        break;
+      }
+      case 'btn-play-next': {
+        if (state.currentIndex >= state.shuffled.length) {
+          state = { ...state, phase: 'idle', currentTrack: null };
+          saveState(state);
+          render(state);
+          return;
+        }
+        const trackToPlay = state.shuffled[state.currentIndex];
+        state = applyPlayNext(state);
+        saveState(state);
+        playTrack(trackToPlay);
+        render(state);
+        break;
+      }
+      case 'btn-pass': {
+        state = applyPassTurn(state);
+        saveState(state);
+        render(state);
+        break;
+      }
+    }
   });
 }
 
@@ -206,5 +344,17 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, applyReveal, applyLock, applyPlayNext, applyPassTurn, buildInitialState, saveState, loadState };
+  module.exports = {
+    shuffleArray,
+    drawNextTrack,
+    buildInitialState,
+    mergeTimeline,
+    isCorrectPlacement,
+    applyReveal,
+    applyLock,
+    applyPlayNext,
+    applyPassTurn,
+    saveState,
+    loadState,
+  };
 }
