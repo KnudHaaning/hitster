@@ -75,51 +75,6 @@ main {
   gap: 16px;
 }
 
-.idle-icon {
-  font-size: 64px;
-  opacity: 0.3;
-}
-
-/* ── Reveal area ── */
-.reveal-area {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  animation: fadeIn 0.3s ease;
-}
-
-/* .hidden is defined globally above */
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.year-badge {
-  background: var(--green);
-  color: #000;
-  font-size: 52px;
-  font-weight: 900;
-  padding: 10px 28px;
-  border-radius: 14px;
-  letter-spacing: -1px;
-}
-
-.song-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
-  max-width: 280px;
-  line-height: 1.3;
-}
-
-.song-artist {
-  font-size: 15px;
-  color: var(--muted);
-}
-
 /* ── Footer ── */
 footer {
   display: flex;
@@ -181,4 +136,170 @@ footer {
 .complete-content p {
   color: var(--muted);
   font-size: 15px;
+}
+
+/* ── Turn indicator ── */
+.turn-indicator {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.turn-indicator strong { color: var(--text); }
+
+/* ── Inactive team chip ── */
+.team-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin: 0 16px 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.team-chip .score { color: var(--green); font-weight: 700; }
+
+/* ── Active team row ── */
+.team-row {
+  background: rgba(29, 185, 84, 0.08);
+  border: 1px solid var(--green);
+  border-radius: 12px;
+  margin: 0 16px 12px;
+  padding: 10px 12px;
+}
+.team-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.team-name { font-weight: 700; font-size: 13px; }
+.team-score { color: var(--green); font-weight: 700; font-size: 13px; }
+
+/* ── Timeline strip ── */
+.timeline-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.timeline-strip::-webkit-scrollbar { height: 4px; }
+.timeline-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Card chips ── */
+.card-chip {
+  flex-shrink: 0;
+  min-width: 56px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+  background: var(--surface);
+  border: 2px solid var(--green);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.card-chip .yr { font-size: 16px; font-weight: 800; color: var(--text); }
+.card-chip .ti {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.1;
+  margin-top: 2px;
+  max-width: 56px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-chip.at-risk {
+  border-style: dashed;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* ── Slots ── */
+.slot {
+  flex-shrink: 0;
+  width: 22px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--border);
+  font-size: 16px;
+  cursor: pointer;
+  background: transparent;
+}
+.slot.target {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(29, 185, 84, 0.12);
+}
+
+/* ── Play area (mystery card + revealed card) ── */
+.play-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 12px;
+}
+.idle-icon { font-size: 64px; opacity: 0.3; }
+
+.mystery-card {
+  background: var(--green);
+  color: #000;
+  border-radius: 14px;
+  padding: 28px 36px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+}
+.mystery-card .sub {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
+
+.revealed-card { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.revealed-card .yr-badge {
+  background: var(--green);
+  color: #000;
+  font-size: 48px;
+  font-weight: 900;
+  padding: 10px 26px;
+  border-radius: 14px;
+}
+.revealed-card.wrong .yr-badge { background: #ef4444; color: #fff; }
+.revealed-card .title { font-size: 18px; font-weight: 700; max-width: 280px; line-height: 1.3; }
+.revealed-card .artist { font-size: 14px; color: var(--muted); }
+.revealed-card .loss-msg {
+  font-size: 13px;
+  color: #ef4444;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* ── Button stack ── */
+.button-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 24px 24px;
+  flex-shrink: 0;
 }
