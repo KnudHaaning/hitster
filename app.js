@@ -30,6 +30,25 @@ function isCorrectPlacement(timeline, slotIndex, year) {
   return y >= left && y <= right;
 }
 
+function applyReveal(state) {
+  const team = state.teams[state.activeTeam];
+  const timeline = mergeTimeline(team);
+  const correct = isCorrectPlacement(timeline, state.selectedSlot, state.currentTrack.year);
+
+  const newTeams = state.teams.map((t, i) => {
+    if (i !== state.activeTeam) return t;
+    return correct
+      ? { ...t, atRisk: [...t.atRisk, state.currentTrack] }
+      : { ...t, atRisk: [] };
+  });
+
+  return {
+    ...state,
+    teams: newTeams,
+    phase: correct ? 'revealed-correct' : 'revealed-wrong',
+  };
+}
+
 // ─── State management ─────────────────────────────────────────────────────
 
 const STATE_KEY = 'hitster_state';
@@ -149,5 +168,5 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, buildInitialState, saveState, loadState };
+  module.exports = { shuffleArray, drawNextTrack, mergeTimeline, isCorrectPlacement, applyReveal, buildInitialState, saveState, loadState };
 }

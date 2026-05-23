@@ -174,3 +174,59 @@ describe('isCorrectPlacement', () => {
     expect(isCorrectPlacement(tl, 2, '2000')).toBe(true);
   });
 });
+
+const { applyReveal } = require('../app.js');
+
+describe('applyReveal', () => {
+  const baseState = () => ({
+    shuffled: [],
+    currentIndex: 5,
+    currentTrack: { uri: 'x', title: 'X', artist: 'Y', year: '1990' },
+    selectedSlot: 1,
+    teams: [
+      { name: 'Team 1', banked: [{ year: '1980' }, { year: '2000' }], atRisk: [] },
+      { name: 'Team 2', banked: [{ year: '1985' }], atRisk: [] },
+    ],
+    activeTeam: 0,
+    targetScore: 10,
+    phase: 'placing',
+    winner: null,
+  });
+
+  test('correct placement: pushes track to atRisk and sets phase to revealed-correct', () => {
+    const state = baseState();
+    const result = applyReveal(state);
+    expect(result.phase).toBe('revealed-correct');
+    expect(result.teams[0].atRisk).toEqual([state.currentTrack]);
+    expect(result.teams[0].banked).toEqual(state.teams[0].banked);
+    expect(result.currentTrack).toEqual(state.currentTrack);
+  });
+
+  test('wrong placement: clears atRisk and sets phase to revealed-wrong', () => {
+    const state = baseState();
+    state.teams[0].atRisk = [{ year: '1992' }, { year: '1996' }];
+    state.currentTrack.year = '2050';
+    const result = applyReveal(state);
+    expect(result.phase).toBe('revealed-wrong');
+    expect(result.teams[0].atRisk).toEqual([]);
+    expect(result.teams[0].banked).toEqual(state.teams[0].banked);
+  });
+
+  test('uses merged timeline (banked + atRisk) for correctness check', () => {
+    const state = baseState();
+    state.teams[0].atRisk = [{ year: '1995' }];
+    state.currentTrack.year = '1990';
+    state.selectedSlot = 1;
+    const result = applyReveal(state);
+    expect(result.phase).toBe('revealed-correct');
+    expect(result.teams[0].atRisk).toHaveLength(2);
+  });
+
+  test('does not mutate the input state', () => {
+    const state = baseState();
+    const beforeAtRisk = [...state.teams[0].atRisk];
+    applyReveal(state);
+    expect(state.teams[0].atRisk).toEqual(beforeAtRisk);
+    expect(state.phase).toBe('placing');
+  });
+});
