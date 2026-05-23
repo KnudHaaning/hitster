@@ -35,6 +35,8 @@ function applyReveal(state) {
   const timeline = mergeTimeline(team);
   const correct = isCorrectPlacement(timeline, state.selectedSlot, state.currentTrack.year);
 
+  const lossCount = correct ? 0 : team.atRisk.length;
+
   const newTeams = state.teams.map((t, i) => {
     if (i !== state.activeTeam) return t;
     return correct
@@ -46,6 +48,7 @@ function applyReveal(state) {
     ...state,
     teams: newTeams,
     phase: correct ? 'revealed-correct' : 'revealed-wrong',
+    lossCount,
   };
 }
 
@@ -69,7 +72,10 @@ function applyLock(state) {
 }
 
 function applyPlayNext(state) {
-  const { track, newState } = drawNextTrack(state);
+  if (state.currentIndex >= state.shuffled.length) {
+    return state;
+  }
+  const { newState } = drawNextTrack(state);
   return {
     ...newState,
     selectedSlot: null,
@@ -186,6 +192,12 @@ function renderPlayArea(state) {
       `<div class="yr-badge">${esc(t.year)}</div>` +
       `<div class="title">${esc(t.title)}</div>` +
       `<div class="artist">${esc(t.artist)}</div>`;
+    if (state.phase === 'revealed-wrong' && state.lossCount > 0) {
+      const msg = document.createElement('div');
+      msg.className = 'loss-msg';
+      msg.textContent = `Lost ${state.lossCount} card${state.lossCount === 1 ? '' : 's'}`;
+      card.appendChild(msg);
+    }
     area.appendChild(card);
   }
 }
@@ -242,10 +254,10 @@ function render(state) {
   const active = state.teams[state.activeTeam];
   const inactive = state.teams[1 - state.activeTeam];
 
-  document.getElementById('turn-indicator').innerHTML = `Turn: <strong>${active.name}</strong>`;
+  document.getElementById('turn-indicator').innerHTML = `Turn: <strong>${esc(active.name)}</strong>`;
 
   const chip = document.getElementById('inactive-team-chip');
-  chip.innerHTML = `<span>${inactive.name}</span><span class="score">${inactive.banked.length} / ${state.targetScore}</span>`;
+  chip.innerHTML = `<span>${esc(inactive.name)}</span><span class="score">${inactive.banked.length} / ${state.targetScore}</span>`;
 
   document.getElementById('active-team-name').textContent = active.name;
   document.getElementById('active-team-score').textContent =
@@ -262,7 +274,8 @@ function render(state) {
 }
 
 function init() {
-  let state = loadState() || buildInitialState(TRACKS);
+  const loaded = loadState();
+  let state = (loaded && Array.isArray(loaded.teams)) ? loaded : buildInitialState(TRACKS);
   saveState(state);
   render(state);
 

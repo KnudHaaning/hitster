@@ -200,6 +200,7 @@ describe('applyReveal', () => {
     expect(result.teams[0].atRisk).toEqual([state.currentTrack]);
     expect(result.teams[0].banked).toEqual(state.teams[0].banked);
     expect(result.currentTrack).toEqual(state.currentTrack);
+    expect(result.lossCount).toBe(0);
   });
 
   test('wrong placement: clears atRisk and sets phase to revealed-wrong', () => {
@@ -210,6 +211,16 @@ describe('applyReveal', () => {
     expect(result.phase).toBe('revealed-wrong');
     expect(result.teams[0].atRisk).toEqual([]);
     expect(result.teams[0].banked).toEqual(state.teams[0].banked);
+    expect(result.lossCount).toBe(2);
+  });
+
+  test('lossCount is 0 when wrong placement happens with no prior at-risk cards', () => {
+    const state = baseState();
+    state.currentTrack.year = '2050';   // out of bounds
+    // state.teams[0].atRisk is already [] from baseState
+    const result = applyReveal(state);
+    expect(result.phase).toBe('revealed-wrong');
+    expect(result.lossCount).toBe(0);
   });
 
   test('uses merged timeline (banked + atRisk) for correctness check', () => {
@@ -324,6 +335,13 @@ describe('applyPlayNext', () => {
   test('keeps activeTeam unchanged', () => {
     const result = applyPlayNext(baseState());
     expect(result.activeTeam).toBe(0);
+  });
+
+  test('returns state unchanged when deck is empty', () => {
+    const state = baseState();
+    state.currentIndex = state.shuffled.length;
+    const result = applyPlayNext(state);
+    expect(result).toEqual(state);
   });
 });
 

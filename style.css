@@ -45,10 +45,6 @@ header {
   letter-spacing: 3px;
 }
 
-.counter {
-  color: var(--muted);
-  font-size: 13px;
-}
 
 .btn-new-game {
   background: transparent;
