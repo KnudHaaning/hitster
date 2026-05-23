@@ -13,32 +13,42 @@
   <div id="screen-game" class="screen">
     <header>
       <span class="logo">HITSTER</span>
-      <span id="counter" class="counter">0 / 0</span>
+      <span id="turn-indicator" class="turn-indicator"></span>
       <button id="btn-new-game" class="btn-new-game">New Game</button>
     </header>
 
-    <main>
-      <div id="reveal-area" class="reveal-area hidden">
-        <div id="year-badge" class="year-badge"></div>
-        <div id="song-title" class="song-title"></div>
-        <div id="song-artist" class="song-artist"></div>
-      </div>
-      <div id="idle-icon" class="idle-icon">🎵</div>
-    </main>
+    <div id="inactive-team-chip" class="team-chip"></div>
 
-    <footer>
-      <button id="btn-play" class="btn btn-primary">▶ Play Song</button>
-      <button id="btn-reveal" class="btn btn-secondary" disabled>👁 Reveal Song</button>
-    </footer>
+    <div id="active-team-row" class="team-row active">
+      <div class="team-row-header">
+        <span id="active-team-name" class="team-name"></span>
+        <span id="active-team-score" class="team-score"></span>
+      </div>
+      <div id="timeline-strip" class="timeline-strip"></div>
+    </div>
+
+    <main id="play-area" class="play-area"></main>
+
+    <footer id="button-stack" class="button-stack"></footer>
   </div>
 
-  <!-- Session Complete Screen -->
-  <div id="screen-complete" class="screen hidden">
+  <!-- Winner Screen -->
+  <div id="screen-winner" class="screen hidden">
     <main class="complete-content">
       <div class="complete-icon">🎉</div>
-      <h1>All songs played!</h1>
-      <p>Great game. Ready for another round?</p>
-      <button id="btn-new-session" class="btn btn-primary">▶ Start New Session</button>
+      <h1 id="winner-headline"></h1>
+      <p id="winner-scores"></p>
+      <button id="btn-new-game-winner" class="btn btn-primary">▶ Start New Game</button>
+    </main>
+  </div>
+
+  <!-- Deck Empty Screen -->
+  <div id="screen-deck-empty" class="screen hidden">
+    <main class="complete-content">
+      <div class="complete-icon">🎵</div>
+      <h1>Deck empty</h1>
+      <p id="deck-empty-result"></p>
+      <button id="btn-new-game-deck" class="btn btn-primary">▶ Start New Game</button>
     </main>
   </div>
 
